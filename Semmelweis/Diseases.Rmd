@@ -1,7 +1,7 @@
 ---
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -59,7 +59,7 @@ options(repr.plot.width=7, repr.plot.height=4)
 ggplot(yearly, aes(x = year, y = proportion_deaths, col = clinic)) + 
   geom_line()
 ```
-![png](C:/Users/Aaron/Documents/output_7_1.png)
+![png](output_7_1.png)
 
 ## 4. The handwashing begins
 <p>Why is the proportion of deaths constantly so much higher in Clinic 1? Semmelweis saw the same pattern and was puzzled and distressed. The only difference between the clinics was that many medical students served at Clinic 1, while mostly midwife students served at Clinic 2. While the midwives only tended to the women giving birth, the medical students also spent time in the autopsy rooms examining corpses. </p>
@@ -90,7 +90,7 @@ geom_line() + geom_point()+
 scale_color_brewer(palette="Paired")+
 theme_minimal()
 ```
-![png](C:/Users/Aaron/Documents/output_13_1.png)
+![png](output_13_1.png)
 
 ## 6. The effect of handwashing highlighted
 <p>Starting from the summer of 1847 the proportion of deaths is drastically reduced and, yes, this was when Semmelweis made handwashing obligatory. </p>
@@ -111,7 +111,7 @@ geom_line() + geom_point()+
 scale_color_brewer(palette="Paired")+
 theme_minimal()
 ```
-![png](C:/Users/Aaron/Documents/output_16_1.png)
+![png](output_16_1.png)
 
 ## 7. More handwashing, fewer deaths?
 <p>Again, the graph shows that handwashing had a huge effect. How much did it reduce the monthly proportion of deaths on average?</p>
