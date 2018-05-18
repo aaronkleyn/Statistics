@@ -1,0 +1,161 @@
+---
+title: "Importing and Cleaning Datasets: Ticket Sales"
+author: "Aaron Kleyn"
+date: "May 18, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+Import the dataset
+```{r, echo = FALSE}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+```{r}
+# Import sales.csv: sales
+url_sales <- 'http://s3.amazonaws.com/assets.datacamp.com/production/course_1294/datasets/sales.csv'
+sales <- read.csv(url_sales, stringsAsFactors=F)
+```
+
+Examine the dataset
+
+```{r}
+# View dimensions of sales
+dim(sales)
+```
+
+```{r}
+# Inspect first 6 rows of sales
+head(sales)
+```
+
+```{r}
+# View column names of sales
+names(sales)
+```
+
+Summarizing the dataset
+
+```{r}
+# Look at structure of sales
+str(sales)
+```
+
+```{r}
+# View a summary of sales
+summary(sales)
+```
+
+```{r, warning = FALSE}
+# Load dplyr
+library(dplyr)
+
+# Get a glimpse of sales
+glimpse(sales)
+```
+
+Remove redundant information
+
+```{r}
+# Remove the first column of sales: sales2
+sales2 <- sales[,-1]
+str(sales[,1:5])
+```
+
+```{r}
+str(sales2[,1:5])
+```
+
+
+Remove unnecessary information
+
+```{r}
+# Define a vector of column indices: keep
+## We don't want the first 4 coumns or the last 15
+keep <- seq(5,ncol(sales2)-15,1)
+
+# Subset sales2 using keep: sales3
+sales3 <- sales2[,keep]
+glimpse(sales3)
+```
+
+Separating columns
+
+```{r, warning = FALSE}
+# Load tidyr
+library(tidyr)
+
+# Split event_date_time: sales4
+head(sales3$event_date_time)
+```
+
+```{r}
+library(stringr)
+sales4 <- separate(sales3, event_date_time, c('event_dt', 'event_time'), sep = " ")
+
+## check new columns
+col <- str_detect(names(sales4),'event')
+glimpse(sales4[,col])
+```
+
+
+```{r}
+# Split sales_ord_create_dttm: sales5
+head(sales4$sales_ord_create_dttm)
+```
+
+```{r}
+sales5 <- separate(sales4, sales_ord_create_dttm, c('ord_create_dt', 'ord_create_time'), sep = " ")
+
+## check new columns
+col <- str_detect(names(sales5),'ord_create')
+glimpse(sales5[,col])
+```
+
+
+
+Identifying Dates
+
+```{r, warning = FALSE}
+# Load stringr
+library(stringr)
+
+# Find columns of sales5 containing "dt": date_cols
+date_cols <- str_detect(colnames(sales5), "dt")
+glimpse(sales5[,date_cols])
+```
+
+```{r, warning = FALSE}
+# Load lubridate
+library(lubridate)
+
+# Coerce date columns into Date objects
+sales5[, date_cols] <- lapply(sales5[, date_cols], ymd)
+
+# Check column types
+glimpse(sales5[,date_cols])
+```
+
+
+
+
+
+Combine the columns
+
+```{r}
+## tidyr is loaded
+
+# Combine the venue_city and venue_state columns
+sales6 <- unite(sales5, venue_city_state, venue_city, venue_state, sep = ", ")
+
+# View the head of sales6
+head(sales6)
+```
+
+```{r}
+head(sales6$venue_city_state)
+```
+
+
