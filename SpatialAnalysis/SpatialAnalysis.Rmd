@@ -1,0 +1,407 @@
+---
+title: "R for Spatial Analysis"
+author: "Aaron Kleyn"
+date: "May 17, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r, load income_grid, include=FALSE}
+load("C:/Users/Aaron/Downloads/income_grid.rda")
+```
+```{r, load land_cover, include=FALSE}
+load("C:/Users/Aaron/Downloads/land_cover.rda")
+```
+```{r, load migration, include=FALSE}
+load("C:/Users/Aaron/Downloads/migration.rda")
+```
+```{r, load neighborhoods, include=FALSE}
+load("C:/Users/Aaron/Downloads/neighborhoods.rda")
+```
+```{r, load nyc_income, include=FALSE}
+load("C:/Users/Aaron/Downloads/nyc_income.rda")
+```
+```{r, load pop, include=FALSE}
+load("C:/Users/Aaron/Downloads/pop.rda")
+```
+```{r, load prop_by_age, include=FALSE}
+load("C:/Users/Aaron/Downloads/prop_by_age.rda")
+```
+```{r, load pop_by_age, include=FALSE}
+load("C:/Users/Aaron/Downloads/pop_by_age.rda")
+```
+```{r, load preds, include=FALSE}
+load("C:/Users/Aaron/Downloads/preds.rda")
+
+```
+```{r, load water, include = FALSE}
+load("C:/Users/Aaron/Downloads/water.rda")
+```
+
+
+The following three plots will be used to construct a demographic plot New York City and the surrounding regions. 
+
+```{r, warning = FALSE}
+library(ggplot2)
+library(sp)
+library(RColorBrewer)
+library(raster)
+library(tmap)
+
+
+# 9 steps on the RColorBrewer "BuPu" palette: blups
+blups <- brewer.pal(9, "BuPu")
+
+# Add scale_fill_gradientn() with the blups palette
+ggplot(preds) +
+  geom_tile(aes(lon, lat, fill = predicted_price), alpha = 0.8) +
+  scale_fill_gradientn(colors = blups)
+
+library(viridisLite)
+# viridisLite viridis palette with 9 steps: vir
+vir <- viridis(9)
+
+# Add scale_fill_gradientn() with the vir palette
+ggplot(preds) +
+  geom_tile(aes(lon, lat, fill = predicted_price), alpha = 0.8) +
+  scale_fill_gradientn(colors = vir)
+  
+# mag: a viridisLite magma palette with 9 steps
+mag <- viridisLite::magma(7)
+
+```
+
+
+
+```{r, warning = FALSE }
+library(classInt)
+library(RColorBrewer)
+
+# Create 5 "pretty" breaks with classIntervals()
+classIntervals(values(prop_by_age[["age_18_24"]]), 
+               n = 5, style = "pretty")
+
+# Create 5 "quantile" breaks with classIntervals()
+classIntervals(values(prop_by_age[["age_18_24"]]), 
+               n = 5, style = "quantile")
+
+# Use 5 "quantile" breaks in tm_raster()
+tm_shape(prop_by_age) +
+  tm_raster("age_18_24", palette = mag, style = "quantile") +
+  tm_legend(position = c("right", "bottom"))
+
+# Create histogram of proportions
+hist(values(prop_by_age)[, "age_18_24"])
+
+# Use fixed breaks in tm_raster()
+tm_shape(prop_by_age) +
+  tm_raster("age_18_24", palette = mag,
+    style = "fixed", breaks = c(0.025, 0.05, 0.1, 0.2, 0.25, 0.3, 1))
+
+# Save your plot to "prop_18-24.html"
+save_tmap(filename = "prop_18-24.html")
+
+```
+
+The following code will derive a plot of net migration in the US from 1990 - 2000
+
+```{r}
+# Print migration
+
+migration
+
+# Diverging "RdGy" palette
+red_gray <- brewer.pal(7, "RdGy")
+
+# Use red_gray as the palette 
+tm_shape(migration) +
+  tm_raster(palette = red_gray) +
+  tm_legend(outside = TRUE, outside.position = c("bottom"))
+
+# Add fixed breaks 
+tm_shape(migration) +
+  tm_raster(palette = red_gray, style = "fixed", 
+     breaks = c(-5e6, -5e3, -5e2, -5e1, 5e1, 5e2, 5e3, 5e6)) +
+  tm_legend(outside = TRUE, outside.position = c("bottom"))
+
+```
+
+
+The following R code will derive a plot of vegetation/climate cover based on longitudinal and latitudinal coordinates. 
+```{r}
+library(raster)
+
+# Plot land_cover
+tm_shape(land_cover) +
+  tm_raster() 
+
+# Palette like the ggplot2 default
+hcl_cols <- hcl(h = seq(15, 375, length = 9), 
+                c = 100, l = 65)[-9]
+
+# Use hcl_cols as the palette
+tm_shape(land_cover) +
+  tm_raster(palette = hcl_cols) 
+
+# Examine levels of land_cover
+levels(land_cover)
+
+# A set of intuitive colors
+intuitive_cols <- c(
+  "darkgreen",
+  "darkolivegreen4",
+  "goldenrod2",
+  "seagreen",
+  "wheat",
+  "slategrey",
+  "white",
+  "lightskyblue1"
+)
+
+# Use intuitive_cols as palette
+tm_shape(land_cover) +
+  tm_raster(palette = intuitive_cols) +
+  tm_legend(position = c("left", "bottom"))
+
+```
+
+The following R code will be used to develop a plot of average annual income in Manhattan. 
+
+```{r, eval = FALSE}
+library(sp)
+library(rgdal)
+
+# Use dir() to find directory name
+dir()
+
+# Call dir() with directory name
+dir('nynta_16c')
+
+# Read in shapefile with readOGR(): neighborhoods
+neighborhoods <- readOGR('nynta_16c', 'nynta')
+```
+
+```{r}
+# summary() of neighborhoods
+summary(neighborhoods)
+
+# Plot neighboorhoods
+plot(neighborhoods)
+
+```
+
+
+```{r, eval = FALSE}
+library(raster) 
+
+# Call dir()
+dir()
+
+# Call dir() on the directory
+dir('nyc_grid_data')
+
+# Use raster() with file path: income_grid
+income_grid <- raster('nyc_grid_data/m5602ahhi00.tif')
+```
+
+```{r}
+# Call summary() on income_grid
+summary(income_grid)
+
+# Call plot() on income_grid
+plot(income_grid)
+
+```
+
+
+
+```{r, message = FALSE, warning = FALSE}
+library(sp)
+library(tigris)
+# Call tracts(): nyc_tracts
+nyc_tracts <- tracts(state = 'NY', county = 'New York', cb = TRUE)
+
+# proj4string() on nyc_tracts and neighborhoods
+proj4string(nyc_tracts)
+proj4string(neighborhoods)
+
+# coordinates() on nyc_tracts and neighborhoods
+head(coordinates(nyc_tracts))
+head(coordinates(neighborhoods))
+
+# plot() neighborhoods and nyc_tracts
+plot(neighborhoods)
+plot(nyc_tracts, add = TRUE, col = 'red')
+
+```
+
+
+```{r}
+library(sp)
+library(raster)
+library(tigris)
+# Call tracts(): nyc_tracts
+nyc_tracts <- tracts(state = 'NY', county = 'New York', cb = TRUE)
+# Use spTransform on neighborhoods: neighborhoods
+neighborhoods <- spTransform(neighborhoods,   
+                             proj4string(nyc_tracts))
+
+# head() on coordinates() of neighborhoods
+head(coordinates(neighborhoods))
+
+# Plot neighborhoods, nyc_tracts and water
+plot(neighborhoods)
+plot(nyc_tracts, add = TRUE, col = "red")
+plot(water, add = TRUE, col = "blue")
+
+```
+
+```{r}
+library(sp)
+library(tigris)
+# Call tracts(): nyc_tracts
+nyc_tracts <- tracts(state = 'NY', county = 'New York', cb = TRUE)
+# Use str() on nyc_income and nyc_tracts@data
+str(nyc_income)
+str(nyc_tracts@data)
+
+# Highlight tract 002201 in nyc_tracts
+plot(nyc_tracts)
+plot(nyc_tracts[nyc_tracts$TRACTCE == "002201", ], 
+     col = "red", add = TRUE)
+
+# Set nyc_tracts@data to nyc_income
+nyc_tracts@data <- nyc_income
+
+# Highlight tract 002201 in nyc_tracts
+plot(nyc_tracts)
+plot(nyc_tracts[nyc_tracts$tract == "002201", ], 
+     col = "red", add = TRUE)
+
+```
+
+
+```{r}
+library(tigris)
+# Call tracts(): nyc_tracts
+nyc_tracts <- tracts(state = 'NY', county = 'New York', cb = TRUE)
+# Check for duplicates in nyc_income
+any(duplicated(nyc_income$tract))
+
+# Check for duplicates in nyc_tracts
+any(duplicated(nyc_tracts$TRACTCE))
+
+# Check nyc_tracts in nyc_income
+all((nyc_tracts$TRACTCE %in% nyc_income$tract))
+
+# Check nyc_income in nyc_tracts
+all((nyc_income$tract %in% nyc_tracts$TRACTCE))
+
+```
+
+
+```{r}
+library(sp)
+library(tmap)
+library(tigris)
+# Call tracts(): nyc_tracts
+nyc_tracts <- tracts(state = 'NY', county = 'New York', cb = TRUE)
+# Merge nyc_tracts and nyc_income: nyc_tracts_merge
+nyc_tracts_merge <- sp::merge(nyc_tracts, nyc_income, by.x = "TRACTCE", by.y = "tract")
+
+# Call summary() on nyc_tracts_merge
+summary(nyc_tracts_merge)
+
+# Choropleth with col mapped to estimate
+tm_shape(nyc_tracts_merge) +
+  tm_fill(col = "estimate") 
+
+```
+
+
+```{r}
+library(tmap)
+library(tigris)
+tm_shape(nyc_tracts_merge) +
+  tm_fill(col = "estimate") +
+  # Add a water layer, tm_fill() with col = "grey90"
+  tm_shape(water) +
+  tm_fill(col = "grey90") +
+  # Add a neighborhood layer, tm_borders()
+  tm_shape(neighborhoods) +
+  tm_borders() 
+
+```
+
+```{r}
+library(tmap)
+
+# Find unique() nyc_tracts_merge$COUNTYFP
+unique(nyc_tracts_merge$COUNTYFP)
+
+# Add logical expression to pull out New York County
+manhat_hoods <- neighborhoods[neighborhoods$CountyFIPS == "061", ]
+
+tm_shape(nyc_tracts_merge) +
+  tm_fill(col = "estimate") +
+  tm_shape(water) +
+  tm_fill(col = "grey90") +
+  # Edit to use manhat_hoods instead
+  tm_shape(manhat_hoods) +
+  tm_borders() +
+  # Add a tm_text() layer
+  tm_text(text = "NTAName")
+
+```
+
+
+```{r}
+library(tmap)
+
+# gsub() to replace " " with "\n"
+manhat_hoods$name <- gsub(" ", "\n", manhat_hoods$NTAName)
+
+# gsub() to replace "-" with "/\n"
+manhat_hoods$name <- gsub("-", "/\n", manhat_hoods$name)
+
+# Edit to map text to name, set size to 0.5
+tm_shape(nyc_tracts_merge) +
+    tm_fill(col = "estimate") +
+  tm_shape(water) +
+    tm_fill(col = "grey90") +
+  tm_shape(manhat_hoods) +
+    tm_borders() +
+    tm_text(text = "name", size = 0.5)
+
+```
+
+
+```{r}
+library(tmap)
+
+tm_shape(nyc_tracts_merge) +
+  # Add title and change palette
+  tm_fill(col = "estimate", 
+          title = "Median Income",
+          palette = "Greens") +
+  # Add tm_borders()
+  tm_borders(col = "grey60", lwd = 0.5) +
+  tm_shape(water) +
+  tm_fill(col = "grey90") +
+  tm_shape(manhat_hoods) +
+  # Change col and lwd of neighborhood boundaries
+  tm_borders(col = "grey40", lwd = 2) +
+  tm_text(text = "name", size = 0.5) +
+  # Add tm_credits()
+  tm_credits("Source: ACS 2014 5-year Estimates, \n accessed via acs package", 
+             position = c("right", "bottom"))
+```
+
+
+```{r, eval = FALSE}
+# Save map as "nyc_income_map.png"
+save_tmap(filename = "nyc_income_map.png", width = 4, height = 7)
+
+```
+
