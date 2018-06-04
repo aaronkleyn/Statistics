@@ -1,0 +1,4 @@
+KleynSTAT344-Package    An R package for fitting a two-component zero
+                        truncated Poisson mixture distribution
+MLEestimate             EM Algorithm for two component zero truncated
+                        Poisson mixture distribution

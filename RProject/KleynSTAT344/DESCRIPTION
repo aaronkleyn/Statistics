@@ -1,0 +1,10 @@
+Package: KleynSTAT344
+Title: EM Algorithm for two component Poisson mixture
+Version: 0.1
+Author: Aaron Kleyn
+Maintainer: Aaron Kleyn <aaronkleyn2018@u.northwestern.edu>
+Description: EM Algorithm for two component Poisson mixture
+Depends: R (>= 3.0.2)
+License: GPL-2
+LazyData: true
+Built: R 3.1.0; ; 2014-06-12 16:00:18 UTC; unix
